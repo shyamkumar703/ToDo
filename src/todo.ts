@@ -30,4 +30,10 @@ id of the ToDo the client is requesting should be passed in the path. I have an 
 of this in quicksplit-be in the party.ts file (on line 9). You should probably do the same thing
 for the DELETE endpoint. For CREATE and UPDATE, you can probably expect a ToDo object
 in the request body.
+
+--------------------------------------------------------------------------------
+TO USE GIT AND GITHUB
+git add -A --> Stages all changed files for commit
+git commit -m "Message here" --> Creats a commit with the provided message
+git push --> Pushes code to the remote repository
 */
