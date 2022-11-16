@@ -1,5 +1,10 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
+import { getFirestore } from "firebase-admin/firestore";
+
+// type imports
+import { ToDo } from "./types";
+import { toDoConverter } from './converters';
 
 export const todoRouter = express.Router();
 
@@ -37,3 +42,62 @@ git add -A --> Stages all changed files for commit
 git commit -m "Message here" --> Creats a commit with the provided message
 git push --> Pushes code to the remote repository
 */
+
+todoRouter.get("/todo/:id", async (req, res) => {
+    const { id } = req.params;
+    const db = getFirestore();
+    const todoRef = db.collection("todo").doc(id).withConverter(toDoConverter);
+    const todoSnap = await todoRef.get();
+    if (todoSnap.exists) {
+        let todo = todoSnap.data();
+        if (todo) {
+            res.json({ success: true, todo: todo });
+        }
+        else {
+            throw new Error("Todo object could not be located");
+        }
+    }
+    else {
+        throw new Error("Todo object could not be located");
+    }
+});
+
+//Create todo item
+todoRouter.post("/todo", async (req, res) => {
+    const { title, date } = req.body;
+    if (typeof title != "string") {
+        throw new Error("Endpoint requires a valid title param");
+    }
+    if (typeof date != "number") {
+        throw new Error("Endpoint requires a valid date param");
+    }
+    const id = uuidv4();
+    const isDeleted = false;
+    const db = getFirestore();
+    const ref = db.collection("todo").doc(id);
+
+    
+});
+
+todoRouter.patch("/todo", async (req, res) => {
+
+});
+
+todoRouter.delete("/todo/:id", async (req, res) => {
+    const { id } = req.params;
+    const db = getFirestore();
+    const todoRef = db.collection("todo").doc(id).withConverter(toDoConverter);
+    const todoSnap = await todoRef.get();
+    if (todoSnap.exists) {
+        let todo = todoSnap.data();
+        if (todo) {
+            todo.isDeleted = true;
+            res.json({ success: true });
+        }
+        
+    }
+    else {
+        //throw error instead
+        res.json({ success: false, code: "todo-event-does-not-exist" });
+    }
+});
