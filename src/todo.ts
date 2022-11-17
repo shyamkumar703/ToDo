@@ -5,6 +5,8 @@ import { getFirestore } from "firebase-admin/firestore";
 // type imports
 import { ToDo } from "./types";
 import { toDoConverter } from './converters';
+import { networkInterfaces } from "os";
+import { ToDo } from './types/index';
 
 export const todoRouter = express.Router();
 
@@ -51,6 +53,7 @@ todoRouter.get("/todo/:id", async (req, res) => {
     if (todoSnap.exists) {
         let todo = todoSnap.data();
         if (todo) {
+            todo.updatedAt = Date.now();
             res.json({ success: true, todo: todo });
         }
         else {
@@ -74,13 +77,37 @@ todoRouter.post("/todo", async (req, res) => {
     const id = uuidv4();
     const isDeleted = false;
     const db = getFirestore();
-    const ref = db.collection("todo").doc(id);
+    const newTodoRef = db.collection("todo").doc()
+    const now = Date.now();
+    const todoRef = db.collection("todo").doc(id).withConverter(toDoConverter);
+    const todoSnap = await todoRef.get();
+    if (todoSnap.exists) {
+        let todo = todoSnap.data();
+        if (todo) {
+            const newTodo: ToDo = {
+                title: todo.title,
+                id: id,
+                createdAt: now,
+                updatedAt: now,
+                isDeleted: false,
+                date: date,
+            } ;
+            await newTodoRef.create(newTodo);
+            res.json({ todo: newTodo });
+        } else {
+            throw new Error("Todo object does not exist");
+        }
+    } else {
+        throw new Error("Todo object does not exist");
+    }
+
 
     
 });
 
 todoRouter.patch("/todo", async (req, res) => {
-
+    const { todo } = req.body;
+    
 });
 
 todoRouter.delete("/todo/:id", async (req, res) => {
@@ -94,10 +121,11 @@ todoRouter.delete("/todo/:id", async (req, res) => {
             todo.isDeleted = true;
             res.json({ success: true });
         }
-        
+        else {
+            throw new Error("Todo object could not be located");
+        }
     }
     else {
-        //throw error instead
-        res.json({ success: false, code: "todo-event-does-not-exist" });
+        throw new Error("Todo object could not be located");
     }
 });
